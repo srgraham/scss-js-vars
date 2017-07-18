@@ -101,7 +101,7 @@ module.exports.getVariables = (scss)->
         if i > 0
           list_value_start_index = comma_indices[i - 1] + 1
 
-        list_value_end_index = comma_indices[i] - 1
+        list_value_end_index = comma_indices[i]
 
         nodes_list_value = nodes.slice list_value_start_index, list_value_end_index
         list_value = reduceValue nodes_list_value
