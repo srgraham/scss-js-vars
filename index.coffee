@@ -41,15 +41,15 @@ module.exports.getVariables = (scss)->
 
   reduceValue = (nodes)->
 
-    if nodes.length is 1
-      return reduceNode nodes[0]
+#    if nodes.length is 1
+#      return reduceNode nodes[0]
 
     # determine type
     colon_indices = []
     comma_indices = []
 
     _.each nodes, (child, i)->
-      if not child.is('operator')
+      if child.type not in ['operator', 'delimiter']
         return
 
       if child.content is ':'
@@ -122,6 +122,9 @@ module.exports.getVariables = (scss)->
       if node.is 'space'
         continue
 
+      if node.is 'default'
+        continue
+
       right_value = reduceNode node
 
       if not left_value
@@ -151,6 +154,13 @@ module.exports.getVariables = (scss)->
     if node.is 'string'
       return node.content.toString().slice 1, -1
 
+    if node.is 'ident'
+      return node.content.toString()
+
+    if node.is 'color'
+      color = node.content
+      return color
+
     if node.is 'variable'
       var_name = node.first('ident')
       return variables[var_name]
@@ -158,6 +168,16 @@ module.exports.getVariables = (scss)->
     # could be an obj
     if node.is 'parentheses'
       return reduceValue(node.content)
+
+    # fixme: this is not accurate
+    if node.is 'dimension'
+      return node.first('number').content
+
+    # fixme: this is not accurate
+    if node.is 'function'
+      func_name = node.first('ident').content
+      args = reduceValue node.first('arguments').content
+      return [func_name, args]
 
     throw new Error("unhandled reduceNode(#{node.type})", JSON.stringify(node))
 

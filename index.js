@@ -41,13 +41,11 @@
     };
     reduceValue = function(nodes) {
       var colon_indices, comma_indices, i, j, k, l, left_value, len, list_value, list_value_end_index, list_value_start_index, node, nodes_list_value, nodes_obj_name, nodes_obj_value, obj_name, obj_name_node_end_index, obj_name_node_start_index, obj_value, obj_value_node_end_index, obj_value_node_start_index, operator, out, ref, ref1, right_value;
-      if (nodes.length === 1) {
-        return reduceNode(nodes[0]);
-      }
       colon_indices = [];
       comma_indices = [];
       _.each(nodes, function(child, i) {
-        if (!child.is('operator')) {
+        var ref;
+        if ((ref = child.type) !== 'operator' && ref !== 'delimiter') {
           return;
         }
         if (child.content === ':') {
@@ -102,6 +100,9 @@
         if (node.is('space')) {
           continue;
         }
+        if (node.is('default')) {
+          continue;
+        }
         right_value = reduceNode(node);
         if (!left_value) {
           left_value = right_value;
@@ -127,12 +128,19 @@
       return left_value;
     };
     reduceNode = function(node) {
-      var var_name;
+      var args, color, func_name, var_name;
       if (node.is('number')) {
         return +node.content;
       }
       if (node.is('string')) {
         return node.content.toString().slice(1, -1);
+      }
+      if (node.is('ident')) {
+        return node.content.toString();
+      }
+      if (node.is('color')) {
+        color = node.content;
+        return color;
       }
       if (node.is('variable')) {
         var_name = node.first('ident');
@@ -140,6 +148,14 @@
       }
       if (node.is('parentheses')) {
         return reduceValue(node.content);
+      }
+      if (node.is('dimension')) {
+        return node.first('number').content;
+      }
+      if (node.is('function')) {
+        func_name = node.first('ident').content;
+        args = reduceValue(node.first('arguments').content);
+        return [func_name, args];
       }
       throw new Error("unhandled reduceNode(" + node.type + ")", JSON.stringify(node));
     };
